@@ -515,6 +515,179 @@ body {
 
 </div>
 <script>
+const trees = [];
+let currentTree = null;
+let persons = [];
+
+const treesList = document.getElementById('treesList');
+const btnAddTree = document.getElementById('btnAddTree');
+const modalAddTree = document.getElementById('modalAddTree');
+const btnCloseAddTree = document.getElementById('btnCloseAddTree');
+const btnCancelAddTree = document.getElementById('btnCancelAddTree');
+const btnConfirmAddTree = document.getElementById('btnConfirmAddTree');
+const newTreeName = document.getElementById('newTreeName');
+const toast = document.getElementById('toast');
+
+const pageTrees = document.getElementById('pageTrees');
+const pageDiagram = document.getElementById('pageDiagram');
+
+const btnAddPerson = document.getElementById('btnAddPerson');
+const btnAddPersonList = document.getElementById('btnAddPersonList');
+const modalEditPerson = document.getElementById('modalEditPerson');
+const btnCloseEditPerson = document.getElementById('btnCloseEditPerson');
+const btnCancelEdit = document.getElementById('btnCancelEdit');
+const formPerson = document.getElementById('formPerson');
+const personsList = document.getElementById('personsList');
+const badgePersons = document.getElementById('badgePersons');
+
+function showToast(text) {
+  toast.textContent = text;
+  toast.classList.remove('hidden');
+
+  setTimeout(() => {
+    toast.classList.add('hidden');
+  }, 2000);
+}
+
+function renderTrees() {
+  treesList.innerHTML = '';
+
+  if (trees.length === 0) {
+    treesList.innerHTML = '<div class="empty-state">Ще немає дерев</div>';
+    return;
+  }
+
+  trees.forEach((tree, index) => {
+    const li = document.createElement('li');
+    li.className = 'tree-item';
+
+    li.innerHTML = `
+      <div>
+        <div class="tree-item-name">${tree.name}</div>
+        <div class="tree-item-sub">Родове дерево</div>
+      </div>
+    `;
+
+    li.onclick = () => openTree(index);
+
+    treesList.appendChild(li);
+  });
+}
+
+function openTree(index) {
+  currentTree = trees[index];
+
+  pageTrees.classList.remove('active');
+  pageTrees.classList.add('hidden');
+
+  pageDiagram.classList.remove('hidden');
+  pageDiagram.classList.add('active');
+
+  document.getElementById('headerTitle').textContent = currentTree.name;
+
+  showToast('Дерево відкрито');
+}
+
+btnAddTree.onclick = () => {
+  modalAddTree.classList.remove('hidden');
+};
+
+btnCloseAddTree.onclick = closeTreeModal;
+btnCancelAddTree.onclick = closeTreeModal;
+
+document.getElementById('overlayAddTree').onclick = closeTreeModal;
+
+function closeTreeModal() {
+  modalAddTree.classList.add('hidden');
+}
+
+btnConfirmAddTree.onclick = () => {
+  const name = newTreeName.value.trim();
+
+  if (!name) {
+    showToast('Введи назву дерева');
+    return;
+  }
+
+  trees.push({ name });
+  newTreeName.value = '';
+
+  closeTreeModal();
+  renderTrees();
+
+  showToast('Дерево створено');
+};
+
+function openPersonModal() {
+  modalEditPerson.classList.remove('hidden');
+}
+
+function closePersonModal() {
+  modalEditPerson.classList.add('hidden');
+}
+
+btnAddPerson.onclick = openPersonModal;
+btnAddPersonList.onclick = openPersonModal;
+btnCloseEditPerson.onclick = closePersonModal;
+btnCancelEdit.onclick = closePersonModal;
+document.getElementById('overlayEdit').onclick = closePersonModal;
+
+formPerson.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const firstName = document.getElementById('fFirstName').value;
+  const lastName = document.getElementById('fLastName').value;
+  const gender = document.getElementById('fGender').value;
+
+  if (!firstName.trim()) {
+    showToast('Введи імʼя');
+    return;
+  }
+
+  const person = {
+    firstName,
+    lastName,
+    gender
+  };
+
+  persons.push(person);
+
+  renderPersons();
+  closePersonModal();
+
+  formPerson.reset();
+
+  showToast('Особу додано');
+});
+
+function renderPersons() {
+  personsList.innerHTML = '';
+
+  badgePersons.textContent = persons.length;
+
+  persons.forEach(person => {
+    const li = document.createElement('li');
+    li.className = 'person-list-item';
+
+    li.innerHTML = `
+      <div class="person-avatar ${person.gender}">
+        ${person.firstName[0] || '?'}
+      </div>
+      <div>
+        <div class="person-list-name">
+          ${person.lastName} ${person.firstName}
+        </div>
+        <div class="person-list-sub">
+          ${person.gender === 'male' ? 'Чоловік' : 'Жінка'}
+        </div>
+      </div>
+    `;
+
+    personsList.appendChild(li);
+  });
+}
+
+renderTrees();
 </script>
 </body>
 </html>
