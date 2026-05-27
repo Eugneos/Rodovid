@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Родовід</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: #f0f0f0;
+  color: #111;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.app-header {
+  background: #8B1A2E;
+  color: white;
+  padding: 0 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-right { display: flex; align-items: center; gap: 6px; }
+.app-title { font-size: 22px; font-weight: bold; }
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.15); }
+.icon-btn svg { width: 22px; height: 22px; fill: white; }
+
+/* PAGES */
+.page { display: none; min-height: calc(100vh - 56px); }
+.page.active { display: block; }
+
+/* TREES LIST */
+.trees-list { list-style: none; background: white; }
+.tree-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: white;
+  cursor: pointer;
+}
+.tree-item:active { background: #f5f5f5; }
+.tree-item-name { font-size: 20px; font-weight: 400; margin-bottom: 3px; }
+.tree-item-sub { font-size: 14px; color: #555; }
+.tree-menu-btn {
+  background: none; border: none; cursor: pointer;
+  color: #888; font-size: 22px; padding: 4px 8px; line-height: 1;
+  letter-spacing: 1px;
+}
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed; top: 0; left: 0; height: 100%; width: 280px;
+  background: white; z-index: 200;
+  box-shadow: 4px 0 16px rgba(0,0,0,0.2);
+  display: flex; flex-direction: column;
+  transform: translateX(0);
+  transition: transform 0.25s ease;
+}
+.sidebar.hidden { transform: translateX(-100%); }
+.sidebar-header {
+  background: #8B1A2E; color: white;
+  padding: 0 16px; height: 56px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sidebar-tree-name { font-size: 18px; font-weight: bold; }
+.sidebar-nav { flex: 1; overflow-y: auto; }
+.nav-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  color: #111; text-decoration: none; font-size: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  border-left: 4px solid transparent;
+}
+.nav-item:active { background: #f5f5f5; }
+.nav-item.active { border-left-color: #8B1A2E; color: #8B1A2E; font-weight: bold; background: #fff5f5; }
+.badge {
+  background: #E8922A; color: white;
+  border-radius: 10px; padding: 2px 8px; font-size: 12px; font-weight: bold;
+}
+.sidebar-footer { padding: 16px; border-top: 1px solid #e0e0e0; }
+
+/* PERSONS LIST */
+.search-wrap { padding: 8px 12px; background: #f0f0f0; }
+.search-input {
+  width: 100%; padding: 9px 12px;
+  border: 1px solid #ccc; border-radius: 4px;
+  font-size: 15px; background: white;
+}
+.search-input:focus { outline: none; border-color: #8B1A2E; }
+.persons-list { list-style: none; background: white; }
+.person-list-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-bottom: 1px solid #e0e0e0; cursor: pointer;
+}
+.person-list-item:active { background: #f5f5f5; }
+.person-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: bold; color: white; flex-shrink: 0;
+  border: 2px solid transparent;
+}
+.person-avatar.male { background: #3a7bd5; border-color: #3a7bd5; }
+.person-avatar.female { background: #c0392b; border-color: #c0392b; }
+.person-list-name { font-size: 16px; font-weight: 500; }
+.person-list-sub { font-size: 13px; color: #666; margin-top: 2px; }
+
+/* FAMILIES LIST */
+.families-list { list-style: none; background: white; }
+.family-item {
+  padding: 14px 16px; border-bottom: 1px solid #e0e0e0; cursor: pointer;
+}
+.family-item:active { background: #f5f5f5; }
+.family-name { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
+.family-sub { font-size: 13px; color: #666; }
+.family-children { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.child-chip {
+  font-size: 12px; padding: 3px 10px;
+  border-radius: 12px; background: #f5f5f5;
+  border: 1px solid #ddd; cursor: pointer;
+}
+.child-chip.male { border-left: 3px solid #3a7bd5; }
+.child-chip.female { border-left: 3px solid #c0392b; }
+
+/* DIAGRAM */
+.diagram-container {
+  width: 100%; height: calc(100vh - 56px);
+  overflow: hidden; position: relative;
+  background: #1a1a2e; cursor: grab;
+}
+.diagram-container:active { cursor: grabbing; }
+.diagram-canvas { position: absolute; transform-origin: 0 0; }
+.diagram-controls {
+  position: fixed; bottom: 80px; left: 16px;
+  display: flex; flex-direction: column; gap: 6px; z-index: 50;
+}
+.ctrl-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: none; background: white; font-size: 20px;
+  cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: bold; color: #8B1A2E;
+}
+
+/* PERSON NODE */
+.person-node {
+  position: absolute; width: 150px; min-height: 68px;
+  background: white; border-radius: 6px; border: 2.5px solid #aaa;
+  padding: 8px 10px; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.person-node.male { border-color: #3a7bd5; background: #f0f5ff; }
+.person-node.female { border-color: #c0392b; background: #fff5f5; }
+.node-name { font-size: 12px; font-weight: 700; line-height: 1.3; color: #111; }
+.node-dates { font-size: 10px; color: #666; margin-top: 3px; }
+.node-relation { font-size: 9px; color: #E8922A; font-weight: 700; margin-top: 2px; }
+.diagram-svg { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+.connector-line { stroke: rgba(255,255,255,0.2); stroke-width: 1.5; fill: none; }
+.connector-couple { stroke: rgba(232,146,42,0.5); stroke-width: 2; stroke-dasharray: 5,3; fill: none; }
+
+/* PROFILE MODAL */
+.modal { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-end; }
+.modal.hidden { display: none; }
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+.modal-content {
+  position: relative; background: white;
+  border-radius: 16px 16px 0 0; width: 100%;
+  max-height: 92vh; overflow-y: auto; z-index: 1;
+  animation: slideUp 0.25s ease;
+}
+.edit-modal { max-height: 96vh; }
+.small-modal { max-height: 45vh; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid #e0e0e0;
+  position: sticky; top: 0; background: white; z-index: 5;
+}
+.modal-header h2 { font-size: 18px; font-weight: bold; color: #8B1A2E; }
+.modal-header-actions { display: flex; gap: 2px; }
+.modal-header .icon-btn { color: #666; }
+.modal-header .icon-btn svg { fill: #666; }
+
+.modal-header.male-header { background: #3a7bd5; }
+.modal-header.female-header { background: #c0392b; }
+.modal-header.male-header h2,
+.modal-header.female-header h2 { color: white; }
+.modal-header.male-header .icon-btn,
+.modal-header.female-header .icon-btn { color: white; }
+.modal-header.male-header .icon-btn svg,
+.modal-header.female-header .icon-btn svg { fill: white; }
+
+/* PROFILE BODY */
+.profile-top {
+  padding: 16px; display: flex; gap: 14px; align-items: center;
+}
+.profile-avatar-big {
+  width: 64px; height: 64px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: bold; color: white; flex-shrink: 0;
+}
+.profile-avatar-big.male { background: #3a7bd5; }
+.profile-avatar-big.female { background: #c0392b; }
+.profile-fullname { font-size: 20px; font-weight: bold; color: white; }
+.profile-lifespan { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 3px; }
+.profile-relbadge {
+  display: inline-block; background: rgba(255,255,255,0.2);
+  padding: 2px 10px; border-radius: 10px; font-size: 12px; color: white; margin-top: 5px;
+}
+
+.profile-section { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; }
+.profile-section:last-child { border-bottom: none; }
+.profile-sec-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: #8B1A2E; margin-bottom: 8px;
+}
+.profile-row { display: flex; justify-content: space-between; margin-bottom: 7px; gap: 8px; }
+.profile-label { font-size: 13px; color: #888; flex-shrink: 0; min-width: 130px; }
+.profile-value { font-size: 14px; font-weight: 500; text-align: right; }
+.death-cause { color: #c0392b; font-weight: 700; }
+
+.relatives-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rel-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 16px;
+  background: #f5f5f5; border: 1px solid #ddd;
+  font-size: 13px; cursor: pointer;
+}
+.rel-chip:active { background: #ffe8e8; }
+.rel-dot { width: 8px; height: 8px; border-radius: 50%; }
+.rel-dot.male { background: #3a7bd5; }
+.rel-dot.female { background: #c0392b; }
+.rel-label { font-size: 11px; color: #E8922A; font-weight: 700; }
+
+/* EDIT FORM */
+.modal-body { padding: 16px; }
+.person-form { display: flex; flex-direction: column; }
+.form-section { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f0f0f0; }
+.form-section:last-of-type { border-bottom: none; }
+.form-section h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #8B1A2E; margin-bottom: 12px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group.full-width { grid-column: 1 / -1; }
+.form-group label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select, .form-group textarea {
+  padding: 9px 11px; border: 1px solid #ccc; border-radius: 4px;
+  font-size: 15px; font-family: inherit; background: white; color: #111; width: 100%;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: #8B1A2E;
+}
+.form-group textarea { resize: vertical; min-height: 70px; }
+.form-actions { display: flex; gap: 10px; padding-top: 4px; }
+
+/* BUTTONS */
+.btn-primary {
+  background: #8B1A2E; color: white; border: none; border-radius: 6px;
+  padding: 11px 20px; font-size: 15px; font-weight: 700; cursor: pointer; flex: 1;
+}
+.btn-primary:active { background: #6d1424; }
+.btn-secondary {
+  background: white; color: #8B1A2E; border: 2px solid #8B1A2E; border-radius: 6px;
+  padding: 9px 16px; font-size: 15px; font-weight: 600; cursor: pointer; flex: 1;
+}
+.btn-secondary:active { background: #fff0f0; }
+
+.fab {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #E8922A; color: white; border: none;
+  font-size: 30px; cursor: pointer; z-index: 50;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.fab:active { background: #d07a1a; }
+
+/* PAGE HEADER for inner pages */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 8px; background: white; border-bottom: 1px solid #e0e0e0;
+}
+.page-header h2 { font-size: 20px; font-weight: bold; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 60px 20px; color: #999; font-size: 16px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  background: #333; color: white; padding: 9px 20px; border-radius: 20px;
+  font-size: 14px; z-index: 500; transition: opacity 0.4s; white-space: nowrap;
+}
+.toast.hidden { display: none; }
+.toast.fade { opacity: 0; }
+
+/* CONTEXT MENU */
+.ctx-menu {
+  position: fixed; background: white; border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 400; overflow: hidden; min-width: 160px;
+}
+.ctx-menu-item {
+  padding: 14px 20px; font-size: 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0;
+}
+.ctx-menu-item:last-child { border-bottom: none; }
+.ctx-menu-item:active { background: #f5f5f5; }
+.ctx-menu-item.danger { color: #c0392b; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="header-left">
+    <button id="menuToggle" class="icon-btn">
+      <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    </button>
+    <span class="app-title" id="headerTitle">Дерева</span>
+  </div>
+  <div class="header-right">
+    <button id="btnHelp" class="icon-btn">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+    </button>
+    <button id="btnSettings" class="icon-btn">
+      <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar hidden">
+  <div class="sidebar-header">
+    <span class="sidebar-tree-name" id="sidebarTreeName">Дерево</span>
+    <button id="closeSidebar" class="icon-btn">
+      <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+    </button>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-page="diagram">Діаграма</a>
+    <a href="#" class="nav-item" data-page="persons">Особи <span class="badge" id="badgePersons">0</span></a>
+    <a href="#" class="nav-item" data-page="families">Сім'ї <span class="badge" id="badgeFamilies">0</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="btn-secondary" id="btnSwitchTree">Дерева</button>
+  </div>
+</aside>
+
+<!-- PAGE: TREES -->
+<main id="pageTrees" class="page active">
+  <ul id="treesList" class="trees-list"></ul>
+  <button class="fab" id="btnAddTree">+</button>
+</main>
+
+<!-- PAGE: DIAGRAM -->
+<main id="pageDiagram" class="page hidden">
+  <div id="diagramContainer" class="diagram-container">
+    <div id="diagramCanvas" class="diagram-canvas"></div>
+  </div>
+  <div class="diagram-controls">
+    <button class="ctrl-btn" id="btnZoomIn">+</button>
+    <button class="ctrl-btn" id="btnZoomOut">−</button>
+    <button class="ctrl-btn" id="btnZoomFit">&#8855;</button>
+  </div>
+  <button class="fab" id="btnAddPerson">+</button>
+</main>
+
+<!-- PAGE: PERSONS -->
+<main id="pagePersons" class="page hidden">
+  <div class="page-header">
+    <h2>Особи</h2>
+    <button class="btn-primary" id="btnAddPersonList" style="flex:none;padding:8px 14px;font-size:14px">+ Додати</button>
+  </div>
+  <div class="search-wrap">
+    <input type="text" id="searchPersons" class="search-input" placeholder="Пошук...">
+  </div>
+  <ul id="personsList" class="persons-list"></ul>
+</main>
+
+<!-- PAGE: FAMILIES -->
+<main id="pageFamilies" class="page hidden">
+  <div class="page-header"><h2>Сім'ї</h2></div>
+  <ul id="familiesList" class="families-list"></ul>
+</main>
+
+<!-- MODAL: PERSON PROFILE -->
+<div id="modalPerson" class="modal hidden">
+  <div class="modal-overlay" id="overlayPerson"></div>
+  <div class="modal-content person-modal">
+    <div class="modal-header" id="personModalHeader">
+      <div id="personModalTitle" style="flex:1"></div>
+      <div class="modal-header-actions">
+        <button class="icon-btn" id="btnEditPerson"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+        <button class="icon-btn" id="btnDeletePerson"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+        <button class="icon-btn" id="btnClosePersonModal"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+      </div>
+    </div>
+    <div id="personModalBody"></div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT PERSON -->
+<div id="modalEditPerson" class="modal hidden">
+  <div class="modal-overlay" id="overlayEdit"></div>
+  <div class="modal-content edit-modal">
+    <div class="modal-header">
+      <h2 id="editPersonTitle">Додати особу</h2>
+      <button class="icon-btn" id="btnCloseEditPerson"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <form id="formPerson" class="person-form">
+        <div class="form-section">
+          <h3>Основна інформація</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Прізвище</label><input type="text" id="fLastName" placeholder="Прізвище"/></div>
+            <div class="form-group"><label>Ім'я</label><input type="text" id="fFirstName" placeholder="Ім'я"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>По батькові</label><input type="text" id="fMiddleName" placeholder="По батькові"/></div>
+            <div class="form-group"><label>Стать</label><select id="fGender"><option value="male">Чоловік</option><option value="female">Жінка</option></select></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>Народження</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Дата</label><input type="text" id="fBirthDate" placeholder="дд.мм.рррр"/></div>
+            <div class="form-group"><label>Місце</label><input type="text" id="fBirthPlace" placeholder="Місто"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Дата хрещення</label><input type="text" id="fBaptismDate" placeholder="дд.мм.рррр"/></div>
+            <div class="form-group"><label>Місце хрещення</label><input type="text" id="fBaptismPlace" placeholder="Церква"/></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>Вінчання / Шлюб</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Дата вінчання</label><input type="text" id="fWeddingDate" placeholder="дд.мм.рррр"/></div>
+            <div class="form-group"><label>Місце вінчання</label><input type="text" id="fWeddingPlace" placeholder="Церква"/></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h3>Смерть</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Дата</label><input type="text" id="fDeathDate" placeholder="дд.мм.рррр"/></div>
+            <div class="form-group"><label>Місце</label><input type="text" id="fDeathPlace" placeholder="Місто"/></div>
+          </div>
+          <div class="form-group full-width"><label>Причина смерті</label><input type="text" id="fDeathCause" placeholder="Причина"/></div>
+        </div>
+        <div class="form-section">
+          <h3>Додатково</h3>
+          <div class="form-group full-width"><label>Професія</label><input type="text" id="fOccupation" placeholder="Професія"/></div>
+          <div class="form-group full-width"><label>Примітки</label><textarea id="fNotes" rows="3" placeholder="Додаткова інформація..."></textarea></div>
+        </div>
+        <div class="form-section">
+          <h3>Зв'язки</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Батько</label><select id="fFather"><option value="">— не вказано —</option></select></div>
+            <div class="form-group"><label>Мати</label><select id="fMother"><option value="">— не вказано —</option></select></div>
+          </div>
+          <div class="form-group full-width"><label>Чоловік / Дружина</label><select id="fSpouse"><option value="">— не вказано —</option></select></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="btnCancelEdit">Скасувати</button>
+          <button type="submit" class="btn-primary">Зберегти</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD TREE -->
+<div id="modalAddTree" class="modal hidden">
+  <div class="modal-overlay" id="overlayAddTree"></div>
+  <div class="modal-content small-modal">
+    <div class="modal-header">
+      <h2>Нове дерево</h2>
+      <button class="icon-btn" id="btnCloseAddTree"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Назва</label><input type="text" id="newTreeName" placeholder="Наприклад: Іваненко"/></div>
+      <div class="form-actions" style="margin-top:16px">
+        <button class="btn-secondary" id="btnCancelAddTree">Скасувати</button>
+        <button class="btn-primary" id="btnConfirmAddTree">Створити</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctxMenu" class="ctx-menu" style="display:none"></div>
+
+<!-- TOAST -->
+<div id="toast" class="toast hidden"></div>
+
+</div>
+<script>
